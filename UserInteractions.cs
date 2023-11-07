@@ -25,7 +25,10 @@ public sealed class UserInteractions
 
     // public static NLog.Logger getLogger() { return logger; }
 
-    public static string OptionsSelector(string[] options)
+    public static string OptionsSelector(string[] options){
+        return OptionsSelector(options,"Please select an option from the following...");
+    }
+    public static string OptionsSelector(string[] options, string customSelectMessage)
     {
         string userInput;
         int selectedNumber;
@@ -48,7 +51,7 @@ public sealed class UserInteractions
         Console.WriteLine();
         do
         {
-            Console.WriteLine("Please select an option from the following...");
+            Console.WriteLine(customSelectMessage);
             Console.WriteLine(optionsTextAsStr);
             Console.Write("Please enter an option from the list: ");
             Console.ForegroundColor = userColor;
