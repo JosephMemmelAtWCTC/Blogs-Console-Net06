@@ -16,6 +16,7 @@ logger.Info("Program started");
 
 string[] MAIN_MENU_OPTIONS_IN_ORDER = { enumToStringMainMenuWorkaround(MAIN_MENU_OPTIONS.Display_All_Blogs),
                                         enumToStringMainMenuWorkaround(MAIN_MENU_OPTIONS.Add_Blog),
+                                        enumToStringMainMenuWorkaround(MAIN_MENU_OPTIONS.Edit_Blog),
                                         enumToStringMainMenuWorkaround(MAIN_MENU_OPTIONS.Deleate_Blog),
                                         enumToStringMainMenuWorkaround(MAIN_MENU_OPTIONS.Create_Post),
                                         enumToStringMainMenuWorkaround(MAIN_MENU_OPTIONS.Display_Posts),
@@ -186,7 +187,22 @@ do
             logger.Info($"Blog (id: {selectedBlog.BlogId}) deleted");
         }
     }
-    else
+    else if (menuCheckCommand == enumToStringMainMenuWorkaround(MAIN_MENU_OPTIONS.Edit_Blog))
+    {
+        Blog selectedBlog = selectBlog("Please select a blog to edit: ");
+        if (selectedBlog != null)
+        {
+            var db = new BloggingContext();
+            // Edit the blog
+                Blog UpdatedBlog = InputBlog(db, logger);
+                if (UpdatedBlog != null)
+                {
+                    UpdatedBlog.BlogId = selectedBlog.BlogId;
+                    db.EditBlog(UpdatedBlog);
+                    logger.Info($"Blog (id: {selectedBlog.BlogId}) updated");
+                }
+        }
+    }    else
     {
         logger.Warn("That menu option is not available, please try again.");
     }
@@ -231,6 +247,28 @@ Blog selectBlog(string selectionMessage){
 }
 
 
+static Blog InputBlog(BloggingContext db, LoggerWithColors logger)
+{
+    Blog blog = new Blog();
+    blog.Name = UserInteractions.UserCreatedStringObtainer("Please enter the updated blog name", 1, false, false);
+
+    ValidationContext context = new ValidationContext(blog, null, null);
+    List<ValidationResult> results = new List<ValidationResult>();
+
+    var isValid = Validator.TryValidateObject(blog, context, results, true);
+    if (isValid)
+    {
+        return blog;
+    }
+    else
+    {
+        foreach (var result in results)
+        {
+            logger.Error($"{result.MemberNames.First()} : {result.ErrorMessage}");
+        }
+    }
+    return null;
+}
 
 
 string enumToStringMainMenuWorkaround(MAIN_MENU_OPTIONS mainMenuEnum)
@@ -242,6 +280,7 @@ string enumToStringMainMenuWorkaround(MAIN_MENU_OPTIONS mainMenuEnum)
         MAIN_MENU_OPTIONS.Exit => "Quit program",
         MAIN_MENU_OPTIONS.Display_All_Blogs => $"Display all blogs", // on file (display max amount is {UserInteractions.PRINTOUT_RESULTS_MAX_TERMINAL_SPACE_HEIGHT / 11:N0})"
         MAIN_MENU_OPTIONS.Add_Blog => "Add Blog",
+        MAIN_MENU_OPTIONS.Edit_Blog => "Edit Blog",
         MAIN_MENU_OPTIONS.Deleate_Blog => "Deleate a blog",
         MAIN_MENU_OPTIONS.Create_Post => "Create New Post",
         MAIN_MENU_OPTIONS.Display_Posts => "Display Posts",
@@ -256,5 +295,6 @@ public enum MAIN_MENU_OPTIONS
     Add_Blog,
     Create_Post,
     Display_Posts,
-    Deleate_Blog
+    Deleate_Blog,
+    Edit_Blog,
 }
