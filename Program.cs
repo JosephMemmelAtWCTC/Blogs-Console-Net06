@@ -1,6 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using NLog;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 // create instance of Logger
 // NLog.Logger logger = UserInteractions.getLogger();
@@ -71,8 +72,34 @@ do
             var blog = new Blog { Name = name };
 
             var db = new BloggingContext();
-            db.AddBlog(blog);
-            logger.Info($"Blog added - {name}");
+            ValidationContext context = new ValidationContext(blog, null, null);
+            List<ValidationResult> results = new List<ValidationResult>();
+
+            var isValid = Validator.TryValidateObject(blog, context, results, true);
+            if (isValid)
+            {
+                // check for unique name
+                if (db.Blogs.Any(b => b.Name == blog.Name))
+                {
+                    // generate validation error
+                    isValid = false;
+                    results.Add(new ValidationResult("Blog name exists", new string[] { "Name" }));
+                }
+                else
+                {
+                    logger.Info("Validation passed");
+                    // save blog to db
+                    db.AddBlog(blog);
+                    logger.Info($"Blog added - {blog.Name}");
+                }
+            }
+            if (!isValid)
+            {
+                foreach (var result in results)
+                {
+                    logger.Error($"{result.MemberNames.First()} : {result.ErrorMessage}");
+                }
+            }
 
             //TODO: Display all blogs?
         }
